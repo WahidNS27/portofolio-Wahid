@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\ExperienceController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\SkillController;
+use App\Http\Controllers\Api\CertificateController;
 use App\Models\Project;
 use Illuminate\Support\Facades\Route;
 
@@ -19,6 +20,8 @@ Route::get('/projects',    [ProjectController::class, 'index']);
 Route::get('/projects/{project}', [ProjectController::class, 'show']);
 Route::get('/skills',      [SkillController::class, 'index']);
 Route::get('/experiences', [ExperienceController::class, 'index']);
+Route::get('/certificates', [CertificateController::class, 'index']);
+Route::get('/certificates/{certificate}', [CertificateController::class, 'show']);
 
 // Contact Form
 Route::post('/contact', [MessageController::class, 'store']);
@@ -52,6 +55,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/experiences',               [ExperienceController::class, 'store']);
     Route::put('/experiences/{experience}',   [ExperienceController::class, 'update']);
     Route::delete('/experiences/{experience}',[ExperienceController::class, 'destroy']);
+
+    // Certificates CRUD
+    Route::post('/certificates',               [CertificateController::class, 'store']);
+    Route::post('/certificates/{certificate}', [CertificateController::class, 'update']);
+    Route::delete('/certificates/{certificate}',[CertificateController::class, 'destroy']);
 
     // Messages (Admin Inbox)
     Route::get('/messages',              [MessageController::class, 'index']);

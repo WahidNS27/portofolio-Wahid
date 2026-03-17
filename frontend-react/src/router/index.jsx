@@ -10,6 +10,7 @@ import Dashboard from '../pages/admin/Dashboard';
 import ProjectsPage from '../pages/admin/ProjectsPage';
 import SkillsPage from '../pages/admin/SkillsPage';
 import ExperiencesPage from '../pages/admin/ExperiencesPage';
+import CertificatesPage from '../pages/admin/CertificatesPage';
 import MessagesPage from '../pages/admin/MessagesPage';
 
 // Admin Layout
@@ -49,6 +50,7 @@ export default function AppRouter() {
           <Route path="projects"     element={<ProjectsPage />} />
           <Route path="skills"       element={<SkillsPage />} />
           <Route path="experiences"  element={<ExperiencesPage />} />
+          <Route path="certificates" element={<CertificatesPage />} />
           <Route path="messages"     element={<MessagesPage />} />
         </Route>
       </Routes>

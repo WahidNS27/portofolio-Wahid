@@ -2,7 +2,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   LayoutDashboard, FolderKanban, Cpu, Clock3, MessageSquare,
-  LogOut, Code2, ExternalLink, ChevronRight
+  LogOut, Code2, ExternalLink, ChevronRight, Award
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -12,6 +12,7 @@ const navItems = [
   { to: '/admin/projects',    icon: <FolderKanban size={18} />,    label: 'Proyek' },
   { to: '/admin/skills',      icon: <Cpu size={18} />,             label: 'Skills' },
   { to: '/admin/experiences', icon: <Clock3 size={18} />,          label: 'Pengalaman' },
+  { to: '/admin/certificates',icon: <Award size={18} />,           label: 'Sertifikat' },
   { to: '/admin/messages',    icon: <MessageSquare size={18} />,   label: 'Pesan Masuk' },
 ];
 

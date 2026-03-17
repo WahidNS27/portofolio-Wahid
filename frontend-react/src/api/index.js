@@ -44,8 +44,16 @@ export const deleteExperience = (id) => api.delete(`/experiences/${id}`);
 // Messages
 export const getMessages = () => api.get('/messages');
 export const getMessageStats = () => api.get('/messages/stats');
-export const readMessage = (id) => api.get(`/messages/${id}`);
+export const getMessage = (id) => api.get(`/messages/${id}`);
+export const readMessage = (id) => api.put(`/messages/${id}/read`);
 export const deleteMessage = (id) => api.delete(`/messages/${id}`);
 export const sendContact = (data) => api.post('/contact', data);
+
+// Certificates
+export const getCertificates = () => api.get('/certificates');
+export const getCertificate = (id) => api.get(`/certificates/${id}`);
+export const createCertificate = (data) => api.post('/certificates', data, { headers: { 'Content-Type': 'multipart/form-data' }});
+export const updateCertificate = (id, data) => api.post(`/certificates/${id}`, data, { headers: { 'Content-Type': 'multipart/form-data' }});
+export const deleteCertificate = (id) => api.delete(`/certificates/${id}`);
 
 export default api;

@@ -7,6 +7,7 @@ const navLinks = [
   { label: 'Tentang', href: '#about' },
   { label: 'Proyek', href: '#projects' },
   { label: 'Pengalaman', href: '#experience' },
+  { label: 'Sertifikat', href: '#certificates' },
   { label: 'Kontak', href: '#contact' },
 ];
 
