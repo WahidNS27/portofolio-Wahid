@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Pencil, Trash2, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Image as ImageIcon } from 'lucide-react';
 import { getSkills, createSkill, updateSkill, deleteSkill } from '../../api';
 import toast from 'react-hot-toast';
 
-const emptyForm = { name: '', icon_url: '', proficiency_level: 80, category: 'Frontend' };
+const emptyForm = { name: '', icon_url: '', category: 'Frontend', image: null };
 const CATEGORIES = ['Frontend', 'Backend', 'Database', 'DevOps', 'Hardware', 'General'];
 
 export default function SkillsPage() {
@@ -12,28 +12,53 @@ export default function SkillsPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyForm);
+  const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
+  const fileRef = useRef();
 
   const load = () => getSkills().then(r => setSkills(r.data)).catch(() => {});
   useEffect(() => { load(); }, []);
 
-  const openCreate = () => { setEditing(null); setForm(emptyForm); setOpen(true); };
-  const openEdit = (s) => { setEditing(s.id); setForm(s); setOpen(true); };
+  const openCreate = () => { setEditing(null); setForm(emptyForm); setPreview(null); setOpen(true); };
+  const openEdit = (s) => { 
+    setEditing(s.id); 
+    setForm({ ...s, image: null }); 
+    setPreview(s.icon_url ? (s.icon_url.startsWith('http') ? s.icon_url : `http://localhost:8000/storage/${s.icon_url}`) : null); 
+    setOpen(true); 
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setForm(f => ({ ...f, image: file }));
+      setPreview(URL.createObjectURL(file));
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
+      const fd = new FormData();
+      fd.append('name', form.name);
+      fd.append('category', form.category);
+      if (form.icon_url) fd.append('icon_url', form.icon_url);
+      if (form.image) fd.append('icon_image', form.image);
+
       if (editing) {
-        await updateSkill(editing, form);
+        fd.append('_method', 'PUT');
+        await updateSkill(editing, fd);
         toast.success('Skill diperbarui!');
       } else {
-        await createSkill(form);
+        await createSkill(fd);
         toast.success('Skill ditambahkan!');
       }
       setOpen(false);
       load();
-    } catch { toast.error('Gagal menyimpan skill.'); }
+    } catch (err) { 
+      toast.error('Gagal menyimpan skill.'); 
+      console.error(err.response?.data || err.message);
+    }
     finally { setLoading(false); }
   };
 
@@ -67,28 +92,27 @@ export default function SkillsPage() {
             <h3 className="font-semibold text-gray-300 mb-4 text-sm uppercase tracking-wider">{cat}</h3>
             <div className="space-y-3">
               {grouped[cat].map(skill => (
-                <div key={skill.id} className="flex items-center gap-4">
-                  <div className="flex items-center gap-3 w-48 flex-shrink-0">
-                    {skill.icon_url && <img src={skill.icon_url} alt={skill.name} className="w-5 h-5 object-contain" />}
-                    <span className="text-white text-sm font-medium">{skill.name}</span>
-                  </div>
-                  <div className="flex-1">
-                    <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${skill.proficiency_level}%` }}
-                        transition={{ duration: 0.8, ease: 'easeOut' }}
-                        className="h-full bg-gradient-to-r from-accent to-cyber-blue rounded-full"
-                      />
+                <div key={skill.id} className="flex items-center justify-between gap-4 p-2 hover:bg-white/5 rounded-lg transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-lg bg-dark-600 flex items-center justify-center overflow-hidden flex-shrink-0">
+                      {skill.icon_url ? (
+                        <img 
+                          src={skill.icon_url.startsWith('http') || skill.icon_url.startsWith('data:') ? skill.icon_url : `http://localhost:8000/storage/${skill.icon_url}`} 
+                          alt={skill.name} 
+                          className="w-full h-full object-contain p-2" 
+                        />
+                      ) : (
+                        <ImageIcon size={16} className="text-gray-500" />
+                      )}
                     </div>
+                    <span className="text-white font-medium">{skill.name}</span>
                   </div>
-                  <span className="text-gray-400 text-xs w-10 text-right font-mono">{skill.proficiency_level}%</span>
-                  <div className="flex gap-1">
-                    <button onClick={() => openEdit(skill)} className="p-1.5 rounded-lg hover:bg-accent/10 hover:text-accent transition-all text-gray-400">
-                      <Pencil size={13} />
+                  <div className="flex gap-2">
+                    <button onClick={() => openEdit(skill)} className="p-2 rounded-lg hover:bg-accent/10 hover:text-accent transition-all text-gray-400">
+                      <Pencil size={15} />
                     </button>
-                    <button onClick={() => handleDelete(skill.id)} className="p-1.5 rounded-lg hover:bg-red-500/10 hover:text-red-400 transition-all text-gray-400">
-                      <Trash2 size={13} />
+                    <button onClick={() => handleDelete(skill.id)} className="p-2 rounded-lg hover:bg-red-500/10 hover:text-red-400 transition-all text-gray-400">
+                      <Trash2 size={15} />
                     </button>
                   </div>
                 </div>
@@ -131,14 +155,27 @@ export default function SkillsPage() {
                     {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
+                
                 <div>
-                  <label className="block text-sm text-gray-300 mb-1.5 font-medium">Proficiency ({form.proficiency_level}%)</label>
-                  <input type="range" min={0} max={100} value={form.proficiency_level}
-                    onChange={e => setForm(f => ({ ...f, proficiency_level: parseInt(e.target.value) }))}
-                    className="w-full accent-indigo-500" />
+                  <label className="block text-sm text-gray-300 mb-1.5 font-medium">Icon Gambar (Upload)</label>
+                  <div
+                    onClick={() => fileRef.current.click()}
+                    className="border-2 border-dashed border-white/10 rounded-xl p-4 text-center cursor-pointer hover:border-accent/40 transition-colors"
+                  >
+                    {preview ? (
+                      <div className="flex justify-center"><img src={preview} alt="Preview" className="h-16 w-16 object-contain" /></div>
+                    ) : (
+                      <div className="py-2 text-gray-500 flex flex-col items-center gap-2">
+                        <ImageIcon size={20} />
+                        <span className="text-xs">Klik untuk upload icon (PNG/SVG/Webp)</span>
+                      </div>
+                    )}
+                    <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+                  </div>
                 </div>
+
                 <div>
-                  <label className="block text-sm text-gray-300 mb-1.5 font-medium">Icon URL</label>
+                  <label className="block text-sm text-gray-300 mb-1.5 font-medium">Atau Icon URL (CDN/Link external)</label>
                   <input value={form.icon_url || ''} onChange={e => setForm(f => ({ ...f, icon_url: e.target.value }))}
                     className="form-input" placeholder="https://cdn.devicons.../..." />
                 </div>

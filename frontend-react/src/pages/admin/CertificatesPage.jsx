@@ -1,8 +1,11 @@
 import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Pencil, Trash2, X, Image as ImageIcon, ExternalLink, Award } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Image as ImageIcon, ExternalLink, Award, AlertCircle } from 'lucide-react';
 import { getCertificates, createCertificate, updateCertificate, deleteCertificate } from '../../api';
 import toast from 'react-hot-toast';
+
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
 
 const emptyForm = {
   title: '', issuer: '', issue_date: '', credential_url: '', image: null,
@@ -15,29 +18,62 @@ export default function CertificatesPage() {
   const [form, setForm] = useState(emptyForm);
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [fileError, setFileError] = useState('');
   const fileRef = useRef();
 
   const load = () => getCertificates().then(r => setItems(r.data)).catch(() => {});
   useEffect(() => { load(); }, []);
 
-  const openCreate = () => { setEditing(null); setForm(emptyForm); setPreview(null); setOpen(true); };
+  const openCreate = () => {
+    setEditing(null);
+    setForm(emptyForm);
+    setPreview(null);
+    setFileError('');
+    setOpen(true);
+  };
+
   const openEdit = (item) => {
     setEditing(item.id);
     setForm({ ...item, image: null, issue_date: item.issue_date?.split('T')[0] || '' });
-    setPreview(item.image_url ? `http://localhost:8000/storage/${item.image_url}` : null);
+    // Use the full URL returned by the API accessor
+    setPreview(item.image_full_url || null);
+    setFileError('');
     setOpen(true);
   };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setForm(f => ({ ...f, image: file }));
-      setPreview(URL.createObjectURL(file));
+    if (!file) return;
+
+    // Client-side validation
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setFileError('Tipe file tidak didukung. Gunakan JPG, PNG, atau WebP.');
+      e.target.value = '';
+      return;
     }
+    if (file.size > MAX_FILE_SIZE) {
+      setFileError(`Ukuran file terlalu besar (${(file.size / 1024 / 1024).toFixed(1)} MB). Maksimum 2 MB.`);
+      e.target.value = '';
+      return;
+    }
+
+    setFileError('');
+    setForm(f => ({ ...f, image: file }));
+    setPreview(URL.createObjectURL(file));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Block submit if there's a live file error
+    if (fileError) return;
+
+    // For create mode, image is required
+    if (!editing && !form.image) {
+      toast.error('Gambar sertifikat wajib diunggah.');
+      return;
+    }
+
     setLoading(true);
     try {
       const fd = new FormData();
@@ -47,18 +83,37 @@ export default function CertificatesPage() {
       if (form.credential_url) fd.append('credential_url', form.credential_url);
       if (form.image) fd.append('image', form.image);
 
+      let response;
       if (editing) {
         fd.append('_method', 'PUT');
-        await updateCertificate(editing, fd);
-        toast.success('Sertifikat diperbarui!');
+        response = await updateCertificate(editing, fd);
+        toast.success('Sertifikat berhasil diperbarui!');
       } else {
-        await createCertificate(fd);
-        toast.success('Sertifikat ditambahkan!');
+        response = await createCertificate(fd);
+        toast.success('Sertifikat berhasil ditambahkan!');
       }
+
       setOpen(false);
-      load();
+
+      // Instant update: replace the item in state with the fresh data from API response
+      const updatedItem = response.data;
+      if (editing) {
+        setItems(prev => prev.map(it => it.id === editing ? updatedItem : it));
+      } else {
+        // Also do a fresh fetch to ensure order is correct (sorted by issue_date desc)
+        load();
+      }
+
     } catch (err) {
-      toast.error('Gagal menyimpan sertifikat.');
+      // Try to show Laravel validation errors if available
+      const errors = err.response?.data?.errors;
+      if (errors) {
+        const messages = Object.values(errors).flat().join(' ');
+        toast.error(messages);
+      } else {
+        const message = err.response?.data?.message || 'Gagal menyimpan sertifikat. Coba lagi.';
+        toast.error(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -68,19 +123,21 @@ export default function CertificatesPage() {
     if (!confirm('Hapus sertifikat ini? Gambar juga akan terhapus dari server.')) return;
     try {
       await deleteCertificate(id);
-      toast.success('Sertifikat dihapus.');
-      load();
-    } catch { toast.error('Gagal menghapus.'); }
+      toast.success('Sertifikat berhasil dihapus.');
+      setItems(prev => prev.filter(it => it.id !== id));
+    } catch {
+      toast.error('Gagal menghapus sertifikat.');
+    }
   };
 
-  const fmt = (d) => new Date(d).toLocaleDateString('id-ID', { month: 'short', year: 'numeric' });
+  const fmt = (d) => d ? new Date(d).toLocaleDateString('id-ID', { month: 'short', year: 'numeric' }) : '—';
 
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-black text-white">Manajemen Sertifikat</h1>
-          <p className="text-gray-400 mt-1">{items.length} sertifikat</p>
+          <p className="text-gray-400 mt-1">{items.length} sertifikat terdaftar</p>
         </div>
         <button onClick={openCreate} className="btn-primary flex items-center gap-2">
           <Plus size={18} /> Tambah Sertifikat
@@ -107,9 +164,12 @@ export default function CertificatesPage() {
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      {item.image_url ? (
-                        <img src={`http://localhost:8000/storage/${item.image_url}`}
-                          className="w-12 h-10 rounded-lg object-cover" alt="" />
+                      {item.image_full_url ? (
+                        <img
+                          src={item.image_full_url}
+                          className="w-12 h-10 rounded-lg object-cover"
+                          alt=""
+                        />
                       ) : (
                         <div className="w-12 h-10 rounded-lg bg-dark-600 flex items-center justify-center">
                           <Award size={16} className="text-gray-600" />
@@ -122,17 +182,20 @@ export default function CertificatesPage() {
                   <td className="px-6 py-4 text-gray-400">{fmt(item.issue_date)}</td>
                   <td className="px-6 py-4">
                     {item.credential_url ? (
-                      <a href={item.credential_url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-accent flex items-center gap-1">
+                      <a href={item.credential_url} target="_blank" rel="noopener noreferrer"
+                        className="text-gray-400 hover:text-accent flex items-center gap-1">
                         <ExternalLink size={16} /> <span className="text-xs">Lihat</span>
                       </a>
                     ) : <span className="text-gray-600">—</span>}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
-                      <button onClick={() => openEdit(item)} className="p-2 rounded-lg bg-white/5 hover:bg-accent/10 hover:text-accent transition-all">
+                      <button onClick={() => openEdit(item)}
+                        className="p-2 rounded-lg bg-white/5 hover:bg-accent/10 hover:text-accent transition-all">
                         <Pencil size={14} />
                       </button>
-                      <button onClick={() => handleDelete(item.id)} className="p-2 rounded-lg bg-white/5 hover:bg-red-500/10 hover:text-red-400 transition-all">
+                      <button onClick={() => handleDelete(item.id)}
+                        className="p-2 rounded-lg bg-white/5 hover:bg-red-500/10 hover:text-red-400 transition-all">
                         <Trash2 size={14} />
                       </button>
                     </div>
@@ -141,6 +204,7 @@ export default function CertificatesPage() {
               ))}
             </tbody>
           </table>
+
           {items.length === 0 && (
             <div className="text-center py-16 text-gray-500 flex flex-col items-center gap-3">
               <Award size={48} className="opacity-20" />
@@ -150,6 +214,7 @@ export default function CertificatesPage() {
         </div>
       </div>
 
+      {/* Create / Edit Modal */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -177,51 +242,91 @@ export default function CertificatesPage() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm text-gray-300 mb-1.5 font-medium">Judul Sertifikat *</label>
-                  <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-                    required className="form-input" placeholder="Google Data Analytics Professional" />
+                  <input
+                    value={form.title}
+                    onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+                    required
+                    className="form-input"
+                    placeholder="Google Data Analytics Professional"
+                  />
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-sm text-gray-300 mb-1.5 font-medium">Penerbit *</label>
-                    <input value={form.issuer} onChange={e => setForm(f => ({ ...f, issuer: e.target.value }))}
-                      required className="form-input" placeholder="Coursera / Google" />
+                    <input
+                      value={form.issuer}
+                      onChange={e => setForm(f => ({ ...f, issuer: e.target.value }))}
+                      required
+                      className="form-input"
+                      placeholder="Coursera / Google"
+                    />
                   </div>
                   <div>
                     <label className="block text-sm text-gray-300 mb-1.5 font-medium">Tanggal Terbit *</label>
-                    <input type="date" value={form.issue_date} onChange={e => setForm(f => ({ ...f, issue_date: e.target.value }))}
-                      required className="form-input" />
+                    <input
+                      type="date"
+                      value={form.issue_date}
+                      onChange={e => setForm(f => ({ ...f, issue_date: e.target.value }))}
+                      required
+                      className="form-input"
+                    />
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm text-gray-300 mb-1.5 font-medium">URL Sertifikat (Kredensial) Asli</label>
-                  <input value={form.credential_url || ''} onChange={e => setForm(f => ({ ...f, credential_url: e.target.value }))}
-                    className="form-input" placeholder="https://coursera.org/verify/..." />
+                  <input
+                    value={form.credential_url || ''}
+                    onChange={e => setForm(f => ({ ...f, credential_url: e.target.value }))}
+                    className="form-input"
+                    placeholder="https://coursera.org/verify/..."
+                  />
                 </div>
 
                 <div>
-                  <label className="block text-sm text-gray-300 mb-1.5 font-medium">Scan Sertifikat / Thumbnail (Lokal)</label>
+                  <label className="block text-sm text-gray-300 mb-1.5 font-medium">
+                    Scan Sertifikat / Thumbnail {!editing && <span className="text-red-400">*</span>}
+                  </label>
                   <div
                     onClick={() => fileRef.current.click()}
-                    className="border-2 border-dashed border-white/10 rounded-xl p-4 text-center cursor-pointer hover:border-accent/40 transition-colors"
+                    className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors
+                      ${fileError ? 'border-red-500/50 bg-red-500/5' : 'border-white/10 hover:border-accent/40'}`}
                   >
                     {preview ? (
                       <img src={preview} alt="Preview" className="h-32 w-full object-contain bg-white/5 rounded-lg" />
                     ) : (
                       <div className="py-6 text-gray-500 flex flex-col items-center gap-2">
                         <ImageIcon size={24} />
-                        <span className="text-sm">Upload gambar sertifikat (PNG/JPG)</span>
+                        <span className="text-sm">Upload gambar sertifikat (JPG, PNG, WebP – maks 2 MB)</span>
                       </div>
                     )}
-                    <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+                    <input
+                      ref={fileRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/jpg,image/webp"
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
                   </div>
+
+                  {/* Inline file validation error */}
+                  {fileError && (
+                    <div className="flex items-center gap-2 mt-2 text-red-400 text-xs">
+                      <AlertCircle size={14} />
+                      <span>{fileError}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex gap-3 pt-2">
                   <button type="button" onClick={() => setOpen(false)} className="btn-outline flex-1">Batal</button>
-                  <button type="submit" disabled={loading} className="btn-primary flex-1 flex items-center justify-center gap-2 disabled:opacity-50">
-                    {loading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
+                  <button
+                    type="submit"
+                    disabled={loading || !!fileError}
+                    className="btn-primary flex-1 flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {loading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                     {editing ? 'Simpan Perubahan' : 'Tambah Sertifikat'}
                   </button>
                 </div>

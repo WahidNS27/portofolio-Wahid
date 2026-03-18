@@ -26,11 +26,10 @@ export default function Navbar() {
       initial={{ y: -80, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled
           ? 'bg-dark-900/90 backdrop-blur-xl border-b border-white/5 shadow-lg shadow-black/20'
           : 'bg-transparent'
-      }`}
+        }`}
     >
       <nav className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo */}
@@ -38,7 +37,7 @@ export default function Navbar() {
           <div className="w-9 h-9 rounded-lg bg-accent flex items-center justify-center shadow-lg shadow-accent/40 group-hover:shadow-accent/60 transition-all">
             <Code2 size={18} className="text-white" />
           </div>
-          <span className="font-bold text-lg gradient-text">Dev.Portfolio</span>
+          <span className="font-bold text-lg gradient-text">Portfolio</span>
         </a>
 
         {/* Desktop Links */}
@@ -57,9 +56,9 @@ export default function Navbar() {
 
         {/* CTA + Mobile Toggle */}
         <div className="flex items-center gap-3">
-          <a href="/admin/login" className="hidden md:block btn-outline py-2 px-5 text-sm">
+          {/* <a href="/admin/login" className="hidden md:block btn-outline py-2 px-5 text-sm">
             Admin
-          </a>
+          </a> */}
           <button
             className="md:hidden text-gray-400 hover:text-white"
             onClick={() => setMobileOpen(!mobileOpen)}

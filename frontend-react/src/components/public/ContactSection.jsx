@@ -79,22 +79,22 @@ export default function ContactSection() {
               {
                 icon: <Mail size={20} />,
                 label: 'Email',
-                value: 'dev@portofolio.com',
-                href: 'mailto:dev@portofolio.com',
+                value: 'wahidsptr27@gmail.com',
+                href: '',
                 color: 'text-accent',
               },
               {
                 icon: <Github size={20} />,
                 label: 'GitHub',
-                value: '@devportfolio',
-                href: 'https://github.com',
+                value: 'WahidNS27',
+                href: 'https://github.com/WahidNS27',
                 color: 'text-white',
               },
               {
                 icon: <Linkedin size={20} />,
                 label: 'LinkedIn',
-                value: 'Dev Portfolio',
-                href: 'https://linkedin.com',
+                value: 'Wahid Narenda Saputra',
+                href: 'https://www.linkedin.com/in/wahidnarendasaputra/',
                 color: 'text-cyber-blue',
               },
             ].map(contact => (
@@ -147,7 +147,7 @@ export default function ContactSection() {
                   <label className="block text-sm text-gray-300 mb-2 font-medium">Nama Lengkap</label>
                   <input
                     type="text"
-                    placeholder="John Doe"
+                    placeholder="nama anda"
                     value={form.name}
                     onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                     className={inputClass}
@@ -160,7 +160,7 @@ export default function ContactSection() {
                   <label className="block text-sm text-gray-300 mb-2 font-medium">Email</label>
                   <input
                     type="email"
-                    placeholder="john@example.com"
+                    placeholder="tes@example.com"
                     value={form.email}
                     onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                     className={inputClass}

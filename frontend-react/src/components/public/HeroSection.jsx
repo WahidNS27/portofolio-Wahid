@@ -134,7 +134,7 @@ export default function HeroSection() {
         >
           <p className="text-gray-400 text-xl mb-2">Halo, saya Wahid Narenda Saputra</p>
           <h1 className="text-6xl md:text-8xl font-black mb-6 text-shadow-glow">
-            <span className="gradient-text">Seorang</span>
+            <span className="gradient-text">Enthusiast</span>
           </h1>
         </motion.div>
 
@@ -148,9 +148,9 @@ export default function HeroSection() {
           <span className="text-accent">{"<"}</span>
           <TypeAnimation
             sequence={[
-              'Junior Developer', 2500,
+              'Junior WEB Developer', 2500,
               // 'IoT Engineer', 2000,
-              // 'UI/UX Enthusiast', 2000,
+              'UI/UX Enthusiast', 2000,
               'Problem Solver', 2000,
             ]}
             wrapper="span"
@@ -168,8 +168,8 @@ export default function HeroSection() {
           transition={{ delay: 0.5 }}
           className="text-gray-400 text-lg max-w-2xl mx-auto mb-12 leading-relaxed"
         >
-          Membangun solusi digital yang elegan dan fungsional — dari web modern hingga sistem IoT.
-          Passionate tentang clean code, user experience, dan teknologi masa depan.
+          Junior Web Developer & UI/UX Designer yang antusias membangun solusi digital elegan dan fungsional, mencakup pengembangan web.
+          Berkomitmen pada pengalaman pengguna (user experience) yang intuitif, serta eksplorasi teknologi masa depan.
         </motion.p>
 
         {/* CTA Buttons */}
@@ -201,8 +201,8 @@ export default function HeroSection() {
           className="flex items-center justify-center gap-6"
         >
           {[
-            { href: 'https://github.com', icon: <Github size={20} />, label: 'GitHub' },
-            { href: 'https://linkedin.com', icon: <Linkedin size={20} />, label: 'LinkedIn' },
+            { href: 'https://github.com/WahidNS27', icon: <Github size={20} />, label: 'GitHub' },
+            { href: 'https://www.linkedin.com/in/wahidnarendasaputra/', icon: <Linkedin size={20} />, label: 'LinkedIn' },
           ].map((s) => (
             <a
               key={s.label}

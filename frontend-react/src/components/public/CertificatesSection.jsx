@@ -20,11 +20,13 @@ const itemVariants = {
 export default function CertificatesSection() {
   const [certificates, setCertificates] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [loadingCerts, setLoadingCerts] = useState(true);
 
   useEffect(() => {
     getCertificates()
       .then(res => setCertificates(res.data))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoadingCerts(false));
   }, []);
 
   const formatDate = (dateStr) => {
@@ -69,85 +71,104 @@ export default function CertificatesSection() {
           </motion.p>
         </div>
 
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
-        >
-          {certificates.map((cert) => (
-            <motion.div
-              key={cert.id}
-              variants={itemVariants}
-              className="glass-card group overflow-hidden flex flex-col h-full hover:shadow-2xl hover:shadow-cyber-pink/10 transition-all duration-300 transform hover:-translate-y-1"
-            >
-              {/* Image Thumbnail */}
-              <div 
-                className="relative h-48 sm:h-56 bg-dark-800 overflow-hidden cursor-pointer"
-                onClick={() => setSelectedImage(cert.image_url ? `http://localhost:8000/storage/${cert.image_url}` : null)}
-              >
-                {cert.image_url ? (
-                  <>
-                    <img
-                      src={`http://localhost:8000/storage/${cert.image_url}`}
-                      alt={cert.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-sm">
-                      <span className="bg-white/10 text-white px-4 py-2 rounded-xl backdrop-blur-md border border-white/20 flex items-center gap-2 font-medium">
-                        <ImageIcon size={18} /> Perbesar
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center text-gray-600 gap-2">
-                    <Award size={40} className="opacity-20" />
-                    <span className="text-sm">Gambar tidak tersedia</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Content */}
-              <div className="p-6 flex-1 flex flex-col">
-                <div className="mb-4">
-                  <h3 className="text-lg font-bold text-white group-hover:text-cyber-pink transition-colors line-clamp-2">
-                    {cert.title}
-                  </h3>
-                  <p className="text-gray-400 mt-2 font-medium text-sm">
-                    {cert.issuer}
-                  </p>
-                  <p className="text-gray-500 text-xs mt-1">
-                    Diterbitkan: {formatDate(cert.issue_date)}
-                  </p>
+        {/* Loading Skeleton */}
+        {loadingCerts && (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="glass-card overflow-hidden animate-pulse">
+                <div className="h-48 bg-white/5" />
+                <div className="p-6 space-y-3">
+                  <div className="h-5 bg-white/5 rounded-lg w-3/4" />
+                  <div className="h-4 bg-white/5 rounded-lg w-1/2" />
+                  <div className="h-3 bg-white/5 rounded-lg w-1/3" />
                 </div>
-                
-                <div className="mt-auto pt-4 border-t border-white/5">
-                  {cert.credential_url ? (
-                    <a
-                      href={cert.credential_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs font-medium text-gray-400 hover:text-white flex items-center gap-1.5 transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <ExternalLink size={14} /> Lihat Kredensial Asli
-                    </a>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Certificates Grid */}
+        {!loadingCerts && (
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
+          >
+            {certificates.map((cert) => (
+              <motion.div
+                key={cert.id}
+                variants={itemVariants}
+                className="glass-card group overflow-hidden flex flex-col h-full hover:shadow-2xl hover:shadow-cyber-pink/10 transition-all duration-300 transform hover:-translate-y-1"
+              >
+                {/* Image Thumbnail */}
+                <div
+                  className="relative h-48 sm:h-56 bg-dark-800 overflow-hidden cursor-pointer"
+                  onClick={() => cert.image_full_url && setSelectedImage(cert.image_full_url)}
+                >
+                  {cert.image_full_url ? (
+                    <>
+                      <img
+                        src={cert.image_full_url}
+                        alt={cert.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-sm">
+                        <span className="bg-white/10 text-white px-4 py-2 rounded-xl backdrop-blur-md border border-white/20 flex items-center gap-2 font-medium">
+                          <ImageIcon size={18} /> Perbesar
+                        </span>
+                      </div>
+                    </>
                   ) : (
-                    <span className="text-xs font-medium text-gray-600 block">Kredensial offline / tidak ada link</span>
+                    <div className="w-full h-full flex flex-col items-center justify-center text-gray-600 gap-2">
+                      <Award size={40} className="opacity-20" />
+                      <span className="text-sm">Gambar tidak tersedia</span>
+                    </div>
                   )}
                 </div>
+
+                {/* Content */}
+                <div className="p-6 flex-1 flex flex-col">
+                  <div className="mb-4">
+                    <h3 className="text-lg font-bold text-white group-hover:text-cyber-pink transition-colors line-clamp-2">
+                      {cert.title}
+                    </h3>
+                    <p className="text-gray-400 mt-2 font-medium text-sm">
+                      {cert.issuer}
+                    </p>
+                    <p className="text-gray-500 text-xs mt-1">
+                      Diterbitkan: {formatDate(cert.issue_date)}
+                    </p>
+                  </div>
+
+                  <div className="mt-auto pt-4 border-t border-white/5">
+                    {cert.credential_url ? (
+                      <a
+                        href={cert.credential_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-medium text-gray-400 hover:text-white flex items-center gap-1.5 transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <ExternalLink size={14} /> Lihat Kredensial Asli
+                      </a>
+                    ) : (
+                      <span className="text-xs font-medium text-gray-600 block">Kredensial offline / tidak ada link</span>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+
+            {certificates.length === 0 && (
+              <div className="col-span-full py-20 text-center text-gray-500">
+                <Award size={48} className="mx-auto mb-4 opacity-20" />
+                <p>Belum ada sertifikat yang ditambahkan.</p>
               </div>
-            </motion.div>
-          ))}
-          
-          {certificates.length === 0 && (
-            <div className="col-span-full py-20 text-center text-gray-500">
-              <Award size={48} className="mx-auto mb-4 opacity-20" />
-              <p>Belum ada sertifikat yang ditambahkan.</p>
-            </div>
-          )}
-        </motion.div>
+            )}
+          </motion.div>
+        )}
       </div>
 
       {/* Lightbox / Modal */}

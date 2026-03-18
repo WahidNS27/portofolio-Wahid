@@ -62,6 +62,7 @@ export default function ProjectsPage() {
       setOpen(false);
       load();
     } catch (err) {
+      console.error('Error detail:', err.response?.data || err.message);
       toast.error('Gagal menyimpan proyek.');
     } finally {
       setLoading(false);

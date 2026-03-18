@@ -12,12 +12,7 @@ class Skill extends Model
     protected $fillable = [
         'name',
         'icon_url',
-        'proficiency_level',
         'category',
         'order',
-    ];
-
-    protected $casts = [
-        'proficiency_level' => 'integer',
     ];
 }

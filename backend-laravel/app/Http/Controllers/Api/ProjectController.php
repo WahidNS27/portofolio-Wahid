@@ -31,7 +31,7 @@ class ProjectController extends Controller
             'live_url'    => 'nullable|url',
             'is_featured' => 'boolean',
             'order'       => 'integer',
-            'image'       => 'nullable|image|max:4096',
+            'image'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
         if ($request->hasFile('image')) {
@@ -54,21 +54,28 @@ class ProjectController extends Controller
             'live_url'    => 'nullable|url',
             'is_featured' => 'boolean',
             'order'       => 'integer',
-            'image'       => 'nullable|image|max:4096',
+            'image'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
         if ($request->hasFile('image')) {
             // Delete old image
-            if ($project->image_url) {
+            if ($project->image_url && Storage::disk('public')->exists($project->image_url)) {
                 Storage::disk('public')->delete($project->image_url);
             }
-            $data['image_url'] = $request->file('image')->store('projects', 'public');
+
+            // Store new image
+            $path = $request->file('image')->store('projects', 'public');
+            $project->image_url = $path;
         }
 
         unset($data['image']);
-        $project->update($data);
+        // Remove image_url from data if we handled it manually, to avoid overriding
+        unset($data['image_url']);
+        
+        $project->fill($data);
+        $project->save();
 
-        return response()->json($project);
+        return response()->json($project->fresh());
     }
 
     public function destroy(Project $project)

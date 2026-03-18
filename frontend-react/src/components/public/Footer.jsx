@@ -8,12 +8,12 @@ export default function Footer() {
           <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
             <Code2 size={16} className="text-white" />
           </div>
-          <span className="font-bold gradient-text">Dev.Portfolio</span>
+          <span className="font-bold gradient-text">Portfolio</span>
         </div>
 
-        <p className="text-gray-500 text-sm flex items-center gap-1">
+        {/* <p className="text-gray-500 text-sm flex items-center gap-1">
           Dibuat dengan <Heart size={12} className="text-red-400 fill-red-400" /> menggunakan React.js & Laravel
-        </p>
+        </p> */}
 
         <div className="flex items-center gap-4">
           <a href="https://github.com" target="_blank" rel="noopener noreferrer"

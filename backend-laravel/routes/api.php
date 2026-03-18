@@ -43,7 +43,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Projects CRUD
     Route::post('/projects', [ProjectController::class, 'store']);
-    Route::post('/projects/{project}', [ProjectController::class, 'update']); // POST for multipart
+    Route::match(['post', 'put'], '/projects/{project}', [ProjectController::class, 'update']); // POST/PUT for multipart edit
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
 
     // Skills CRUD

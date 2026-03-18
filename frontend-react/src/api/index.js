@@ -31,8 +31,8 @@ export const deleteProject = (id) => api.delete(`/projects/${id}`);
 
 // Skills
 export const getSkills = () => api.get('/skills');
-export const createSkill = (data) => api.post('/skills', data);
-export const updateSkill = (id, data) => api.put(`/skills/${id}`, data);
+export const createSkill = (data) => api.post('/skills', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const updateSkill = (id, data) => api.post(`/skills/${id}`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const deleteSkill = (id) => api.delete(`/skills/${id}`);
 
 // Experiences
