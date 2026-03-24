@@ -148,9 +148,9 @@ export default function HeroSection() {
           <span className="text-accent">{"<"}</span>
           <TypeAnimation
             sequence={[
-              'Junior WEB Developer', 2500,
+              'Junior Web Developer', 2500,
               // 'IoT Engineer', 2000,
-              'UI/UX Enthusiast', 2000,
+              'Junior UI/UX Design', 2000,
               'Problem Solver', 2000,
             ]}
             wrapper="span"

@@ -58,7 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Certificates CRUD
     Route::post('/certificates',               [CertificateController::class, 'store']);
-    Route::post('/certificates/{certificate}', [CertificateController::class, 'update']);
+    Route::match(['post', 'put'], '/certificates/{certificate}', [CertificateController::class, 'update']);
     Route::delete('/certificates/{certificate}',[CertificateController::class, 'destroy']);
 
     // Messages (Admin Inbox)
