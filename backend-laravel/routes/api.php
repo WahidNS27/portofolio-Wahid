@@ -65,5 +65,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/messages',              [MessageController::class, 'index']);
     Route::get('/messages/stats',        [MessageController::class, 'stats']);
     Route::get('/messages/{message}',    [MessageController::class, 'show']);
+    Route::patch('/messages/{id}/read',  [MessageController::class, 'markAsRead']);
     Route::delete('/messages/{message}', [MessageController::class, 'destroy']);
 });

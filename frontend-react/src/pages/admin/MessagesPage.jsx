@@ -9,13 +9,19 @@ export default function MessagesPage() {
   const [selected, setSelected] = useState(null);
   const [filter, setFilter] = useState('all');
 
-  const load = () => getMessages().then(r => setMessages(r.data)).catch(() => {});
+  const load = () => getMessages().then(r => setMessages(r.data)).catch(() => { });
   useEffect(() => { load(); }, []);
 
-  const handleRead = async (msg) => {
-    const res = await readMessage(msg.id);
-    setSelected(res.data);
-    load(); // refresh read status
+  const handleViewMessage = async (msg) => {
+    setSelected(msg);
+    if (!msg.is_read) {
+      setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, is_read: true } : m));
+      try {
+        await readMessage(msg.id);
+      } catch (err) {
+        setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, is_read: false } : m));
+      }
+    }
   };
 
   const handleDelete = async (id) => {
@@ -42,9 +48,8 @@ export default function MessagesPage() {
         <div className="flex gap-1 p-1 rounded-xl bg-white/5 border border-white/10">
           {['all', 'unread', 'read'].map(f => (
             <button key={f} onClick={() => setFilter(f)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all capitalize ${
-                filter === f ? 'bg-accent text-white' : 'text-gray-400 hover:text-white'
-              }`}>
+              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all capitalize ${filter === f ? 'bg-accent text-white' : 'text-gray-400 hover:text-white'
+                }`}>
               {f === 'all' ? 'Semua' : f === 'unread' ? 'Belum Dibaca' : 'Sudah Dibaca'}
             </button>
           ))}
@@ -64,8 +69,8 @@ export default function MessagesPage() {
                 key={msg.id}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className={`flex items-start gap-4 px-6 py-4 hover:bg-white/3 transition-colors cursor-pointer ${!msg.is_read ? 'border-l-2 border-accent' : ''}`}
-                onClick={() => handleRead(msg)}
+                className={`flex items-start gap-4 px-6 py-4 transition-colors cursor-pointer ${!msg.is_read ? 'border-l-2 border-accent bg-white/5 hover:bg-white/10' : 'hover:bg-white/3'}`}
+                onClick={() => handleViewMessage(msg)}
               >
                 {/* Avatar */}
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-cyber-purple flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
@@ -75,7 +80,7 @@ export default function MessagesPage() {
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <p className={`font-semibold text-sm ${!msg.is_read ? 'text-white' : 'text-gray-300'}`}>{msg.name}</p>
+                    <p className={`text-sm ${!msg.is_read ? 'font-bold text-white' : 'font-normal text-gray-300'}`}>{msg.name}</p>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span className="text-gray-500 text-xs flex items-center gap-1">
                         <Clock size={10} /> {fmt(msg.created_at)}
@@ -84,7 +89,7 @@ export default function MessagesPage() {
                     </div>
                   </div>
                   <p className="text-gray-500 text-xs mt-0.5">{msg.email}</p>
-                  <p className="text-gray-400 text-sm mt-1 line-clamp-1">{msg.message}</p>
+                  <p className={`text-sm mt-1 line-clamp-1 ${!msg.is_read ? 'font-semibold text-gray-200' : 'text-gray-400'}`}>{msg.message}</p>
                 </div>
 
                 {/* Delete */}
@@ -132,7 +137,7 @@ export default function MessagesPage() {
               <div className="flex items-center justify-between text-gray-500 text-xs">
                 <span className="flex items-center gap-1"><Clock size={11} /> {fmt(selected.created_at)}</span>
                 <div className="flex gap-3">
-                  <a href={`mailto:${selected.email}`} className="btn-primary py-2 px-4 text-sm">Balas via Email</a>
+                  {/* <a href={`mailto:${selected.email}`} className="btn-primary py-2 px-4 text-sm">Balas via Email</a> */}
                   <button onClick={() => { handleDelete(selected.id); setSelected(null); }}
                     className="px-4 py-2 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 text-sm transition-all">
                     Hapus

@@ -41,6 +41,18 @@ class MessageController extends Controller
         return response()->json(['message' => 'Pesan berhasil dihapus.']);
     }
 
+    public function markAsRead($id)
+    {
+        $message = Message::findOrFail($id);
+        $message->is_read = true;
+        $message->save();
+
+        return response()->json([
+            'message' => 'Pesan ditandai sudah dibaca',
+            'data' => $message
+        ]);
+    }
+
     public function stats()
     {
         return response()->json([
