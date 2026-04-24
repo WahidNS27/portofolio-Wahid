@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://backend-portofolio.nexama.my.id/api',
+  baseURL: 'https://backend-portofolio.nexama.my.id/public/api',
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
