@@ -82,7 +82,7 @@ export default function ProjectsSection() {
                 <div className="relative h-44 overflow-hidden rounded-t-2xl bg-dark-600">
                   {project.image_url ? (
                     <img
-                      src={`https://backend-portofolio.nexama.my.id/public/api/${project.image_url}`}
+                      src={`https://backend-portofolio.nexama.my.id/public/storage/${project.image_url}`}
                       alt={project.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
